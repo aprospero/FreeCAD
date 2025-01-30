@@ -59,6 +59,7 @@ from draftutils.utils import (type_check,
                               set_param,
                               setParam,
                               precision,
+                              precisionSVG,
                               tolerance)
 
 from draftutils.utils import (get_real_name,
