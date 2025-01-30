@@ -457,9 +457,9 @@ def makewire(path, checkclosed=False, donttry=False):
     Part::Compound
         A compound made of the edges, but unable to form a wire.
     '''
+    import Part
     if not donttry:
         try:
-            import Part
             sh = Part.Wire(Part.__sortEdges__(path))
             # sh = Part.Wire(path)
             isok = (not checkclosed) or sh.isClosed()
@@ -1216,7 +1216,7 @@ class svgHandler(xml.sax.ContentHandler):
                     if path:
                         # The path should be closed by now
                         # sh = makewire(path, True)
-                        sh = makewire(path, donttry=False)
+                        sh = makewire(path, checkclosed=True)
                         if self.fill \
                                 and len(sh.Wires) == 1 \
                                 and sh.Wires[0].isClosed():
