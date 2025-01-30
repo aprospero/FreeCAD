@@ -15,6 +15,7 @@ SET(Draft_SRCS_base
     WorkingPlane.py
     TestDraft.py
     TestDraftGui.py
+    Debug.py
 )
 
 SET(Draft_import
