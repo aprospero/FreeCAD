@@ -83,6 +83,8 @@ else:
     gui = False
     draftui = None
     
+duh_ze_logs = False
+    
   
   
     
@@ -523,6 +525,24 @@ class svgHandler(xml.sax.ContentHandler):
         if self.currentsymbol:
             self.symbols[self.currentsymbol].append(obj)
             
+            
+        if duh_ze_logs:
+            _msg("Final Path {} Vertexes:".format(name))
+            for v in face.Vertexes:
+                _msg("  {:.{pr}f}/{:.{pr}f}".format(v.X, v.Y, pr = Draft.precisionSVG()))
+            _msg("Final Path Edges:")
+            for e in face.Edges:
+                if (len(e.Vertexes) > 1):
+                    _msg("  {:.{pr}f}/{:.{pr}f} -> {:.{pr}f}/{:.{pr}f} (len={:.{pr}f})".
+                         format(e.Vertexes[0].X, e.Vertexes[0].Y, 
+                                e.Vertexes[1].X, e.Vertexes[1].Y, 
+                                math.sqrt((e.Vertexes[0].X - e.Vertexes[1].X)**2 + 
+                                          (e.Vertexes[0].Y - e.Vertexes[1].Y)**2),
+                                pr = Draft.precisionSVG()))
+        
+
+               
+
 
     def startElement(self, name, attrs):
         """Re-organize data into a nice clean dictionary.
@@ -893,6 +913,8 @@ class svgHandler(xml.sax.ContentHandler):
             if not id:
                 id = 'Polyline'
             points = [float(d) for d in data['points']]
+            if duh_ze_logs:
+                _msg('points {}'.format(points))
             lenpoints = len(points)
             if lenpoints >= 4 and lenpoints % 2 == 0:
                 lastvec = Vector(points[0], -points[1], 0)
@@ -1073,10 +1095,14 @@ class svgHandler(xml.sax.ContentHandler):
         """
         if isinstance(sh, Part.Shape):
             if self.transform:
+                if duh_ze_logs:
+                    _msg("applying object transform: {}".format(self.transform))
                 # sh = transformCopyShape(sh, self.transform)
                 # see issue #2062
                 sh = sh.transformGeometry(self.transform)
             for transform in self.grouptransform[::-1]:
+                if duh_ze_logs:
+                    _msg("applying group transform: {}".format(transform))
                 # sh = transformCopyShape(sh, transform)
                 # see issue #2062
                 sh = sh.transformGeometry(transform)
@@ -1086,8 +1112,12 @@ class svgHandler(xml.sax.ContentHandler):
             for p in [sh.Start, sh.End, sh.Dimline]:
                 cp = Vector(p)
                 if self.transform:
+                    if duh_ze_logs:
+                        _msg("applying object transform: {}".format(self.transform))
                     cp = self.transform.multiply(cp)
                 for transform in self.grouptransform[::-1]:
+                    if duh_ze_logs:
+                        _msg("applying group transform: {}".format(transform))
                     cp = transform.multiply(cp)
                 pts.append(cp)
             sh.Start = pts[0]
