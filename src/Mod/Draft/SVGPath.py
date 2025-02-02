@@ -8,6 +8,9 @@ import DraftVecUtils
 from FreeCAD import Vector
 from draftutils.messages import _err, _msg, _wrn
 
+duh_ze_logs = False
+
+
 def arcend2center(lastvec, currentvec, rx, ry,
                   xrotation=0.0, correction=False):
     '''Calculate the possible centers for an arc in endpoint parameterization.
@@ -218,7 +221,8 @@ class FaceTreeNode:
     def insert (self, face, name):
         if face.Area < 10 * (10**-Draft.precisionSVG())**2: 
             # the plane is less than 10 resolution units in size
-            _msg("Drop face {} - too tiny. {}mm²".format(name, face.Area))
+            if duh_ze_log:
+                _msg("Drop face {} - too tiny. {}mm²".format(name, face.Area))
             return 
         for node in self.children:
             if  node.face.Area > face.Area:
@@ -318,6 +322,17 @@ class SvgPath:
 
             path[ 0].vertexes[ 0] = Vector(dx, dy) # replace startpoint
             path[-1].vertexes[-1] = Vector(dx, dy) # replace endpoint
+        
+        #duh ze log  
+        if duh_ze_logs:
+            _msg("Path Edges:")
+            for e in path:
+                _msg("  {:.{pr}f}/{:.{pr}f} -> {:.{pr}f}/{:.{pr}f} (len={:.{pr}f})".
+                         format(e.vertexes[ 0].x, e.vertexes[ 0].y, 
+                                e.vertexes[-1].x, e.vertexes[-1].y, 
+                                math.sqrt((e.vertexes[0].x - e.vertexes[-1].x)**2 + 
+                                          (e.vertexes[0].y - e.vertexes[-1].y)**2),
+                                pr = Draft.precisionSVG()))
         self.paths.append(path)
 
     
@@ -326,6 +341,8 @@ class SvgPath:
         self.paths = []
         currentvec = Vector(0,0,0)
         startvec = currentvec
+        if duh_ze_logs:
+            _msg("SVG-Path Parser Start °°°°°°°°°°°°°°°°°°°°°°°°°°°°")
         for d, pointsstr in self.commands:
             relative = d.islower()
             _points = self.pointsre.findall(pointsstr.replace(',', ' '))
@@ -342,6 +359,8 @@ class SvgPath:
                     startvec = currentvec = startvec.add(Vector(x, -y, 0))
                 else:
                     startvec = currentvec = Vector(x, -y, 0)
+                if duh_ze_logs:
+                    _msg('move {}'.format(currentvec))
                 self.lastpole = None
             if (       (d == 'M' or d == 'm') and pointlist) \
                     or (d == "L" or d == "l") \
@@ -375,6 +394,13 @@ class SvgPath:
                         ele.vertexes.append(currentvec)
                         path.append(ele)
                     else:
+                        if duh_ze_logs:
+                            _msg("Omitting LineSegment {} {:.{pr}f}/{:.{pr}f} -> {:.{pr}f}/{:.{pr}f} (len = {:.{pr}f})".
+                                 format(d, ele.vertexes[0].x, ele.vertexes[0].y, 
+                                        currentvec.x, currentvec.y, 
+                                        math.sqrt((ele.vertexes[0].x - currentvec.x)**2 + 
+                                                  (ele.vertexes[0].y - currentvec.y)**2), 
+                                        pr = Draft.precisionSVG()))
                         currentvec = ele.vertexes[0]
             elif (d == "A" or d == "a"):
                 piter = zip(pointlist[0::7], pointlist[1::7],
@@ -487,12 +513,19 @@ class SvgPath:
 
     def createShapes(self):
         self.shapes = []
+        if duh_ze_logs:
+            _msg("SVG-Path Shape Creator Start °°°°°°°°°°°°°°°°°°°°°°°°°°°°")
         for path in self.paths:
             shape = []
             lastpole = None
             for ele in path:
                 if (ele.type == "Line"):
                     seg = Part.LineSegment(ele.vertexes[0], ele.vertexes[-1]).toShape()
+                    if duh_ze_logs:
+                        _msg("C linesegment {:.{pr}f}/{:.{pr}f} {:.{pr}f}/{:.{pr}f}"
+                                .format(ele.vertexes[ 0].x, ele.vertexes[ 0].y, 
+                                        ele.vertexes[-1].x, ele.vertexes[-1].y, 
+                                        pr = Draft.precisionSVG()))
                 elif (ele.type == "Arc"):
                     rx = ele.values[0]
                     ry = ele.values[1]
@@ -608,10 +641,22 @@ class SvgPath:
                     _d2 = pole2.distanceToLine(lastvec, currentvec)
                     if True and _d1 < _precision and _d2 < _precision:
                         seg = Part.LineSegment(lastvec, currentvec).toShape()
+                        if duh_ze_logs:
+                            _msg("C linesegment {:.{pr}f}/{:.{pr}f} {:.{pr}f}/{:.{pr}f}"
+                                 .format(lastvec.x, lastvec.y, 
+                                         currentvec.x, currentvec.y, 
+                                         pr = Draft.precisionSVG()))
                     else:
                         b = Part.BezierCurve()
                         b.setPoles([lastvec, pole1, pole2, currentvec])
                         seg = b.toShape()
+                        if duh_ze_logs:
+                            _msg("C bspline {:.{pr}f}/{:.{pr}f} {:.{pr}f}/{:.{pr}f} ( {:.{pr}f}/{:.{pr}f} {:.{pr}f}/{:.{pr}f} )"
+                                 .format(lastvec.x, lastvec.y, 
+                                         currentvec.x, currentvec.y, 
+                                         pole1.x, pole1.y, 
+                                         pole2.x, pole2.y, 
+                                         pr = Draft.precisionSVG()))
                     lastpole = ('cubic', pole2)                  
                               
                 elif (ele.type == "QuadBezier"):
@@ -639,10 +684,21 @@ class SvgPath:
                         _distance = pole.distanceToLine(lastvec, currentvec)
                         if _distance < _precision:
                             seg = Part.LineSegment(lastvec, currentvec).toShape()
+                            if duh_ze_logs:
+                                _msg("Q linesegment {:.{pr}f}/{:.{pr}f} {:.{pr}f}/{:.{pr}f}"
+                                     .format(lastvec.x, lastvec.y, 
+                                             currentvec.x, currentvec.y, 
+                                             pr = Draft.precisionSVG()))
                         else:
                             b = Part.BezierCurve()
                             b.setPoles([lastvec, pole, currentvec])
                             seg = b.toShape()
+                            if duh_ze_logs:
+                                _msg("Q bspline {:.{pr}f}/{:.{pr}f} {:.{pr}f}/{:.{pr}f} ( {:.{pr}f}/{:.{pr}f} )"
+                                     .format(lastvec.x, lastvec.y, 
+                                             currentvec.x, currentvec.y, 
+                                             pole.x, pole.y, 
+                                             pr = Draft.precisionSVG()))
                         lastvec = currentvec
                         lastpole = ('quadratic', pole)
                 
@@ -663,7 +719,8 @@ class SvgPath:
                         sh.fix(1e-6, 0, 1)
                     self.faces.insert(sh, self.name + "_" + str(++cnt))
                 except:
-                    _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
+                    if duh_ze_logs:
+                        _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
         
     def doCuts(self):
         self.faces.makeCuts()
