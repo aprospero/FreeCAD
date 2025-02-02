@@ -970,9 +970,10 @@ class svgHandler(xml.sax.ContentHandler):
 
                 if (d == "L" or d == "l") \
                         or ((d == 'm' or d == 'M') and pointlist):
+                    currentvec = lastvec
                     for x, y in zip(pointlist[0::2], pointlist[1::2]):
                         if relative:
-                            currentvec = lastvec.add(Vector(x, -y, 0))
+                            currentvec = currentvec.add(Vector(x, -y, 0))
                         else:
                             currentvec = Vector(x, -y, 0)
                         if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
@@ -983,22 +984,24 @@ class svgHandler(xml.sax.ContentHandler):
                             path.append(seg)
                         lastpole = None
                 elif (d == "H" or d == "h"):
+                    currentvec = lastvec
                     for x in pointlist:
                         if relative:
-                            currentvec = lastvec.add(Vector(x, 0, 0))
+                            currentvec = currentvec.add(Vector(x, 0, 0))
                         else:
-                            currentvec = Vector(x, lastvec.y, 0)
+                            currentvec = Vector(x, currentvec.y, 0)
                         if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
                             seg = Part.LineSegment(lastvec, currentvec).toShape()
                             lastvec = currentvec
                             lastpole = None
                             path.append(seg)
                 elif (d == "V" or d == "v"):
+                    currentvec = lastvec
                     for y in pointlist:
                         if relative:
-                            currentvec = lastvec.add(Vector(0, -y, 0))
+                            currentvec = currentvec.add(Vector(0, -y, 0))
                         else:
-                            currentvec = Vector(lastvec.x, -y, 0)
+                            currentvec = Vector(currentvec.x, -y, 0)
                         if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
                             seg = Part.LineSegment(lastvec, currentvec).toShape()
                             lastvec = currentvec
@@ -1114,20 +1117,21 @@ class svgHandler(xml.sax.ContentHandler):
                                          pointlist[3::6],
                                          pointlist[4::6],
                                          pointlist[5::6]))
+                    currentvec = lastvec
                     for p1x, p1y, p2x, p2y, x, y in piter:
                         if smooth:
                             if lastpole is not None and lastpole[0] == 'cubic':
-                                pole1 = lastvec.sub(lastpole[1]).add(lastvec)
+                                pole1 = currentvec.sub(lastpole[1]).add(currentvec)
                             else:
-                                pole1 = lastvec
+                                pole1 = currentvec
                         else:
                             if relative:
-                                pole1 = lastvec.add(Vector(p1x, -p1y, 0))
+                                pole1 = currentvec.add(Vector(p1x, -p1y, 0))
                             else:
                                 pole1 = Vector(p1x, -p1y, 0)
                         if relative:
-                            currentvec = lastvec.add(Vector(x, -y, 0))
-                            pole2 = lastvec.add(Vector(p2x, -p2y, 0))
+                            pole2 = currentvec.add(Vector(p2x, -p2y, 0))
+                            currentvec = currentvec.add(Vector(x, -y, 0))
                         else:
                             currentvec = Vector(x, -y, 0)
                             pole2 = Vector(p2x, -p2y, 0)
@@ -1170,20 +1174,21 @@ class svgHandler(xml.sax.ContentHandler):
                                          pointlist[1::4],
                                          pointlist[2::4],
                                          pointlist[3::4]))
+                    currentvec = lastvec
                     for px, py, x, y in piter:
                         if smooth:
                             if (lastpole is not None
                                     and lastpole[0] == 'quadratic'):
-                                pole = lastvec.sub(lastpole[1]).add(lastvec)
+                                pole = currentvec.sub(lastpole[1]).add(currentvec)
                             else:
-                                pole = lastvec
+                                pole = currentvec
                         else:
                             if relative:
-                                pole = lastvec.add(Vector(px, -py, 0))
+                                pole = currentvec.add(Vector(px, -py, 0))
                             else:
                                 pole = Vector(px, -py, 0)
                         if relative:
-                            currentvec = lastvec.add(Vector(x, -y, 0))
+                            currentvec = currentvec.add(Vector(x, -y, 0))
                         else:
                             currentvec = Vector(x, -y, 0)
 
