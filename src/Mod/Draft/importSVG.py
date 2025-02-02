@@ -472,8 +472,7 @@ def makewire(path, checkclosed=False, donttry=False):
         # Code from wmayer forum p15549 to fix the tolerance problem
         # original tolerance = 0.00001
         comp = Part.Compound(path)
-        _sh = comp.connectEdgesToWires(False,
-                                       10**(-1 * (Draft.precision() - 2)))
+        _sh = comp.connectEdgesToWires(False, 10**(-Draft.precisionSVG()))
         sh = _sh.Wires[0]
         if len(sh.Edges) != len(path):
             _wrn("Unable to form a wire")
@@ -585,7 +584,7 @@ def arcend2center(lastvec, currentvec, rx, ry,
 
     # If the division is very small, set the scaling factor to zero,
     # otherwise try to calculate it by taking the square root
-    if abs(numer/denom) < 10**(-1 * (Draft.precision())):
+    if abs(numer/denom) < 10**(-Draft.precisionSVG()):
         scalefacpos = 0
     else:
         try:
@@ -976,7 +975,7 @@ class svgHandler(xml.sax.ContentHandler):
                             currentvec = lastvec.add(Vector(x, -y, 0))
                         else:
                             currentvec = Vector(x, -y, 0)
-                        if not DraftVecUtils.equals(lastvec, currentvec):
+                        if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
                             _seg = Part.LineSegment(lastvec, currentvec)
                             seg = _seg.toShape()
                             _msg("line {} {}".format(lastvec, currentvec))
@@ -989,19 +988,19 @@ class svgHandler(xml.sax.ContentHandler):
                             currentvec = lastvec.add(Vector(x, 0, 0))
                         else:
                             currentvec = Vector(x, lastvec.y, 0)
-                        seg = Part.LineSegment(lastvec, currentvec).toShape()
-                        lastvec = currentvec
-                        lastpole = None
-                        path.append(seg)
+                        if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
+                            seg = Part.LineSegment(lastvec, currentvec).toShape()
+                            lastvec = currentvec
+                            lastpole = None
+                            path.append(seg)
                 elif (d == "V" or d == "v"):
                     for y in pointlist:
                         if relative:
                             currentvec = lastvec.add(Vector(0, -y, 0))
                         else:
                             currentvec = Vector(lastvec.x, -y, 0)
-                        if lastvec != currentvec:
-                            _seg = Part.LineSegment(lastvec, currentvec)
-                            seg = _seg.toShape()
+                        if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
+                            seg = Part.LineSegment(lastvec, currentvec).toShape()
                             lastvec = currentvec
                             lastpole = None
                             path.append(seg)
@@ -1020,7 +1019,7 @@ class svgHandler(xml.sax.ContentHandler):
                             currentvec = Vector(x, -y, 0)
                         chord = currentvec.sub(lastvec)
                         # small circular arc
-                        _precision = 10**(-1*Draft.precision())
+                        _precision = 10**(-Draft.precisionSVG())
                         if (not largeflag) and abs(rx - ry) < _precision:
                             # perp = chord.cross(Vector(0, 0, -1))
                             # here is a better way to find the perpendicular
@@ -1085,7 +1084,7 @@ class svgHandler(xml.sax.ContentHandler):
                             seg = e1a.toShape()
                             if swapaxis:
                                 seg.rotate(vcenter, Vector(0, 0, 1), 90)
-                            _precision = 10**(-1*Draft.precision())
+                            _precision = 10**(-Draft.precisionSVG())
                             if abs(xrotation) > _precision:
                                 seg.rotate(vcenter, Vector(0, 0, 1), -xrotation)
                             if sweepflag:
@@ -1133,7 +1132,7 @@ class svgHandler(xml.sax.ContentHandler):
                             currentvec = Vector(x, -y, 0)
                             pole2 = Vector(p2x, -p2y, 0)
 
-                        if not DraftVecUtils.equals(currentvec, lastvec):
+                        if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
                             # mainv = currentvec.sub(lastvec)
                             # pole1v = lastvec.add(pole1)
                             # pole2v = currentvec.add(pole2)
@@ -1141,7 +1140,7 @@ class svgHandler(xml.sax.ContentHandler):
                             #       mainv.normalize(),
                             #       pole1v.normalize(),
                             #       pole2v.normalize())
-                            _precision = 10**(-1*(2+Draft.precision()))
+                            _precision = 10**(-Draft.precisionSVG())
                             _d1 = pole1.distanceToLine(lastvec, currentvec)
                             _d2 = pole2.distanceToLine(lastvec, currentvec)
                             if True and \
@@ -1188,8 +1187,8 @@ class svgHandler(xml.sax.ContentHandler):
                         else:
                             currentvec = Vector(x, -y, 0)
 
-                        if not DraftVecUtils.equals(currentvec, lastvec):
-                            _precision = 20**(-1*(2+Draft.precision()))
+                        if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
+                            _precision = 10**(-Draft.precisionSVG())
                             _distance = pole.distanceToLine(lastvec,
                                                             currentvec)
                             if True and \
@@ -1207,7 +1206,7 @@ class svgHandler(xml.sax.ContentHandler):
                             lastpole = ('quadratic', pole)
                             path.append(seg)
                 elif (d == "Z") or (d == "z"):
-                    if not DraftVecUtils.equals(lastvec, firstvec):
+                    if not DraftVecUtils.equals(lastvec, firstvec, Draft.precisionSVG()):
                         try:
                             seg = Part.LineSegment(lastvec, firstvec).toShape()
                         except Part.OCCError:
@@ -1261,7 +1260,7 @@ class svgHandler(xml.sax.ContentHandler):
             if "y" not in data:
                 data["y"] = 0
             # Negative values are invalid
-            _precision = 10**(-1*Draft.precision())
+            _precision = 10**(-Draft.precisionSVG())
             if ('rx' not in data or data['rx'] < _precision) \
                     and ('ry' not in data or data['ry'] < _precision):
                 # if True:
@@ -1333,7 +1332,7 @@ class svgHandler(xml.sax.ContentHandler):
                 for esh1, esh2 in zip(esh[-1:] + esh[:-1], esh):
                     p1 = esh1.Vertexes[-1].Point
                     p2 = esh2.Vertexes[0].Point
-                    if not DraftVecUtils.equals(p1, p2):
+                    if not DraftVecUtils.equals(p1, p2, Draft.precisionSVG()):
                         # straight segments
                         _sh = Part.LineSegment(p1, p2).toShape()
                         edges.append(_sh)
@@ -1385,7 +1384,7 @@ class svgHandler(xml.sax.ContentHandler):
                     points = points + points[:2]  # emulate closepath
                 for svgx, svgy in zip(points[2::2], points[3::2]):
                     currentvec = Vector(svgx, -svgy, 0)
-                    if not DraftVecUtils.equals(lastvec, currentvec):
+                    if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
                         seg = Part.LineSegment(lastvec, currentvec).toShape()
                         # print("polyline seg ", lastvec, currentvec)
                         lastvec = currentvec
