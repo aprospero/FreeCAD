@@ -956,10 +956,10 @@ class svgHandler(xml.sax.ContentHandler):
                         if self.currentsymbol:
                             self.symbols[self.currentsymbol].append(obj)
                         path = []
-                        # if firstvec:
-                        #    Move relative to last move command
-                        #    not last draw command
-                        #    lastvec = firstvec
+                    # if firstvec:
+                    #    Move relative to last move command
+                    #    not last draw command
+                    #    lastvec = firstvec
                     if relative:
                         lastvec = lastvec.add(Vector(x, -y, 0))
                     else:
@@ -982,7 +982,7 @@ class svgHandler(xml.sax.ContentHandler):
                             _msg("line {} {}".format(lastvec, currentvec))
                             lastvec = currentvec
                             path.append(seg)
-                        lastpole = None
+                        	lastpole = None
                 elif (d == "H" or d == "h"):
                     currentvec = lastvec
                     for x in pointlist:
@@ -1026,7 +1026,7 @@ class svgHandler(xml.sax.ContentHandler):
                         if (not largeflag) and abs(rx - ry) < _precision:
                             # perp = chord.cross(Vector(0, 0, -1))
                             # here is a better way to find the perpendicular
-                            if sweepflag == 1:
+                            if sweepflag != 0:
                                 # clockwise
                                 perp = DraftVecUtils.rotate2D(chord,
                                                               -math.pi/2)
@@ -1194,15 +1194,10 @@ class svgHandler(xml.sax.ContentHandler):
 
                         if not DraftVecUtils.equals(lastvec, currentvec, Draft.precisionSVG()):
                             _precision = 10**(-Draft.precisionSVG())
-                            _distance = pole.distanceToLine(lastvec,
-                                                            currentvec)
-                            if True and \
-                                    _distance < _precision:
-                                # print("straight segment")
-                                _seg = Part.LineSegment(lastvec, currentvec)
-                                seg = _seg.toShape()
+                            _distance = pole.distanceToLine(lastvec, currentvec)
+                            if _distance < _precision:
+                                seg = Part.LineSegment(lastvec, currentvec).toShape()
                             else:
-                                # print("quadratic bezier segment")
                                 b = Part.BezierCurve()
                                 b.setPoles([lastvec, pole, currentvec])
                                 seg = b.toShape()
@@ -1220,7 +1215,7 @@ class svgHandler(xml.sax.ContentHandler):
                             path.append(seg)
                     elif (len(path) > 1):
                         # are start and endpoint the same?
-                        if (path[0].Vertexes[0].X != path[-1].Vertexes[1].X) and (path[0].Vertexes[0].Y != path[-1].Vertexes[1].Y):
+                        if (path[0].Vertexes[0].X != path[-1].Vertexes[1].X) or (path[0].Vertexes[0].Y != path[-1].Vertexes[1].Y):
                             # we end up with a path having mathematically not matching 
                             # start and endpoint. We edit both to the midpoint between 
                             # their original locations
@@ -1248,21 +1243,24 @@ class svgHandler(xml.sax.ContentHandler):
                         if self.fill \
                                 and len(sh.Wires) == 1 \
                                 and sh.Wires[0].isClosed():
-                            sh = Part.Face(sh)
-                            if sh.isValid() is False:
-                                sh.fix(1e-6, 0, 1)
-                        sh = self.applyTrans(sh)
-                        obj = self.doc.addObject("Part::Feature", pathname)
-                        obj.Shape = sh
-                        self.format(obj)
+                            try:
+                                sh = Part.Face(sh)
+                                if sh.isValid() is False:
+                                    sh.fix(1e-6, 0, 1)
+                                sh = self.applyTrans(sh)
+                                obj = self.doc.addObject("Part::Feature", pathname)
+                                obj.Shape = sh
+                                self.format(obj)
+                                if self.currentsymbol:
+                                    self.symbols[self.currentsymbol].append(obj)
+                            except:
+                                _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(pathname))
                         path = []
                         if firstvec:
                             # Move relative to recent draw command
                             lastvec = firstvec
                         point = []
                         # command = None
-                        if self.currentsymbol:
-                            self.symbols[self.currentsymbol].append(obj)
             if path:
                 sh = makewire(path, checkclosed=False)
                 # sh = Part.Wire(path)
