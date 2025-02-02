@@ -24,6 +24,7 @@ SET(Draft_import
     importDWG.py
     importOCA.py
     importSVG.py
+    SVGPath.py
 )
 
 SET (Draft_geoutils
