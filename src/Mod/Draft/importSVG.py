@@ -725,15 +725,15 @@ class svgHandler(xml.sax.ContentHandler):
                     self.width = groupstyle[2]
                     break
 
-        pathname = None
+        id = None
         if 'id' in data:
-            pathname = data['id'][0]
-            _msg('name: {}'.format(pathname))
+            id = data['id'][0]
+            _msg('id: {}'.format(id))
 
         # Process paths
         if name == "path":
-            if not pathname:
-                pathname = "Path"
+            if not id:
+                id = "Path"
             _msg('data: {}'.format(data))
             
             if "freecad:basepoint1" in data:
@@ -749,7 +749,7 @@ class svgHandler(xml.sax.ContentHandler):
                 self.lastdim = obj
                 data['d'] = []
 
-            svgPath = SvgPath(data, pathname)
+            svgPath = SvgPath(data, id)
             svgPath.parse()
             svgPath.createShapes()
             svgPath.createFaces()
@@ -770,8 +770,8 @@ class svgHandler(xml.sax.ContentHandler):
         
         # Process rects
         if name == "rect":
-            if not pathname:
-                pathname = 'Rectangle'
+            if not id:
+                id = 'Rectangle'
             edges = []
             if "x" not in data:
                 data["x"] = 0
@@ -860,7 +860,7 @@ class svgHandler(xml.sax.ContentHandler):
             if self.fill:
                 sh = Part.Face(sh)
             sh = self.applyTrans(sh)
-            obj = self.doc.addObject("Part::Feature", pathname)
+            obj = self.doc.addObject("Part::Feature", id)
             obj.Shape = sh
             self.format(obj)
             if self.currentsymbol:
@@ -868,13 +868,13 @@ class svgHandler(xml.sax.ContentHandler):
 
         # Process lines
         if name == "line":
-            if not pathname:
-                pathname = 'Line'
+            if not id:
+                id = 'Line'
             p1 = Vector(data['x1'], -data['y1'], 0)
             p2 = Vector(data['x2'], -data['y2'], 0)
             sh = Part.LineSegment(p1, p2).toShape()
             sh = self.applyTrans(sh)
-            obj = self.doc.addObject("Part::Feature", pathname)
+            obj = self.doc.addObject("Part::Feature", id)
             obj.Shape = sh
             self.format(obj)
             if self.currentsymbol:
@@ -890,8 +890,8 @@ class svgHandler(xml.sax.ContentHandler):
             #
             # but it would be more difficult to search for duplicate
             # points beforehand.
-            if not pathname:
-                pathname = 'Polyline'
+            if not id:
+                id = 'Polyline'
             points = [float(d) for d in data['points']]
             lenpoints = len(points)
             if lenpoints >= 4 and lenpoints % 2 == 0:
@@ -911,7 +911,7 @@ class svgHandler(xml.sax.ContentHandler):
                     if self.fill and sh.isClosed():
                         sh = Part.Face(sh)
                     sh = self.applyTrans(sh)
-                    obj = self.doc.addObject("Part::Feature", pathname)
+                    obj = self.doc.addObject("Part::Feature", id)
                     obj.Shape = sh
                     self.format(obj)
                     if self.currentsymbol:
@@ -919,8 +919,8 @@ class svgHandler(xml.sax.ContentHandler):
 
         # Process ellipses
         if name == "ellipse":
-            if not pathname:
-                pathname = 'Ellipse'
+            if not id:
+                id = 'Ellipse'
             c = Vector(data.get('cx', 0), -data.get('cy', 0), 0)
             rx = data['rx']
             ry = data['ry']
@@ -937,7 +937,7 @@ class svgHandler(xml.sax.ContentHandler):
                 sh = Part.Wire([sh])
                 sh = Part.Face(sh)
             sh = self.applyTrans(sh)
-            obj = self.doc.addObject("Part::Feature", pathname)
+            obj = self.doc.addObject("Part::Feature", id)
             obj.Shape = sh
             self.format(obj)
             if self.currentsymbol:
@@ -945,8 +945,8 @@ class svgHandler(xml.sax.ContentHandler):
 
         # Process circles
         if name == "circle" and "freecad:skip" not in data:
-            if not pathname:
-                pathname = 'Circle'
+            if not id:
+                id = 'Circle'
             c = Vector(data.get('cx', 0), -data.get('cy', 0), 0)
             r = data['r']
             sh = Part.makeCircle(r)
@@ -955,7 +955,7 @@ class svgHandler(xml.sax.ContentHandler):
                 sh = Part.Face(sh)
             sh.translate(c)
             sh = self.applyTrans(sh)
-            obj = self.doc.addObject("Part::Feature", pathname)
+            obj = self.doc.addObject("Part::Feature", id)
             obj.Shape = sh
             self.format(obj)
             if self.currentsymbol:
@@ -986,8 +986,8 @@ class svgHandler(xml.sax.ContentHandler):
 
         # Process symbols
         if name == "symbol":
-            self.symbols[pathname] = []
-            self.currentsymbol = pathname
+            self.symbols[id] = []
+            self.currentsymbol = id
 
         if name == "use":
             if "xlink:href" in data:
