@@ -1213,6 +1213,29 @@ class svgHandler(xml.sax.ContentHandler):
                             pass
                         else:
                             path.append(seg)
+                    elif (len(path) > 1):
+                        # are start and endpoint the same?
+                        if (path[0].Vertexes[0].X != path[-1].Vertexes[1].X) and (path[0].Vertexes[0].Y != path[-1].Vertexes[1].Y):
+                            # we end up with a path having mathematically not matching 
+                            # start and endpoint. We edit both to the midpoint between 
+                            # their original locations
+                            # start of last edge in path
+                            lx = path[-1].Vertexes[0].X  
+                            ly = path[-1].Vertexes[0].Y
+                            # calculate center between start and endpoint of path
+                            dx = (path[0].Vertexes[0].X + path[-1].Vertexes[1].X) / 2.0
+                            dy = (path[0].Vertexes[0].Y + path[-1].Vertexes[1].Y) / 2.0
+                            # end of first edge in path
+                            fx = path[0].Vertexes[1].X
+                            fy = path[0].Vertexes[1].Y
+                                            
+                            _msg("Correcting start and endpoint of finished path: {}/{} & {}/{} -> {}/{}".
+                                 format(path[-1].Vertexes[1].X, path[-1].Vertexes[1].Y, path[0].Vertexes[0].X, path[0].Vertexes[0].Y, dx, dy))
+    
+                            del path[-1] # replace last edge with new endpoint
+                            path.append(Part.LineSegment(Vector(lx, ly), Vector(dx,dy)).toShape()) 
+                            del path[0] # replace first edge with new startpoint
+                            path.insert(0, Part.LineSegment(Vector(dx, dy), Vector(fx,fy)).toShape())   
                     if path:
                         # The path should be closed by now
                         # sh = makewire(path, True)
