@@ -773,25 +773,16 @@ class svgHandler(xml.sax.ContentHandler):
                 self.format(obj)
                 self.lastdim = obj
                 data['d'] = []
-
-            svgPath = SvgPath(data, id)
-            svgPath.parse()
-            svgPath.createShapes()
-            svgPath.createFaces()
-            svgPath.doCuts()
-            shapes = svgPath.getShapeList()
-            for named_shape in shapes:
-                self.__addFaceToDoc(named_shape)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+                
+            if "d" in data:
+                svgPath = SvgPath(data, id)
+                svgPath.parse()
+                svgPath.createShapes()
+                svgPath.createFaces()
+                svgPath.doCuts()
+                shapes = svgPath.getShapeList()
+                for named_shape in shapes:
+                    self.__addFaceToDoc(named_shape)
         
         # Process rects
         if name == "rect":
