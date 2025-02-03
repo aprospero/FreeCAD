@@ -205,39 +205,70 @@ def arccenter2end(center, rx, ry, angle1, angledelta, xrotation=0.0):
 
 
 class FaceTreeNode:
+    '''Building Block of a tree structure holding one-closed-wire faces 
+       sorted after heir enclosure of each other.
+       This class only works with faces that have exactly one closed wire
+    '''
     face     : Part.Face
     children : list
     name     : str
+
     
     def __init__(self, face=None, name="root"):
         super().__init__()
         self.face = face
         self.name = name
         self.children = [] 
+
       
     def insert (self, face, name):
+        ''' takes a single-wire face, and inserts it into the tree 
+            depending on its enclosure in/of in already added faces
+
+            Parameters
+            ----------
+            face : Part.Face
+                   single closed wire face to be added to the tree
+            name : str
+                   face identifier       
+        ''' 
         if face.Area < 10 * (10**-Draft.precisionSVG())**2: 
             # the plane is less than 10 resolution units in size
             _msg("Drop face {} - too tiny. {}mm²".format(name, face.Area))
             return 
         for node in self.children:
             if  node.face.Area > face.Area:
+                # new face could be encompassed
                 if (face.distToShape(node.face)[0] == 0.0 and 
                     face.Wires[0].distToShape(node.face.Wires[0])[0] != 0.0):
+                    # it is encompassed - enter next tree layer
                     node.insert(face, name)
                     return
             else:
+                # new face could encompass
                 if (node.face.distToShape(face)[0] == 0.0 and
                     node.face.Wires[0].distToShape(face.Wires[0])[0] != 0.0):
-                    self.children.remove(node);
+                    # it does encompass the current child nodes face
+                    # create new node from face
                     new = FaceTreeNode(face, name)
-                    new.children.append(node)
+                    # swap the new one with the child node 
+                    self.children.remove(node)
                     self.children.append(new)
+                    # add former child node as child to the new node
+                    new.children.append(node)
                     return
+        # the face is not encompassing and is not encompassed (from) any
+        # other face, we add it as new child 
         new = FaceTreeNode(face, name)
         self.children.append(new)
+
      
     def makeCuts(self):
+        ''' recursively traverse the tree and cuts all faces in even 
+            numbered tree levels with their direct childrens faces. 
+            Additionally the tree is shrunk by removing the odd numbered 
+            tree levels.                 
+        '''
         result = self.face
         if not result:
             for node in self.children:
@@ -251,13 +282,18 @@ class FaceTreeNode:
                     new_children.append(subnode)
             self.children = new_children
             self.face = result
+
                 
     def traverse(self, function):
         function(self)
         for node in self.children:
             node.traverse(function) 
-            
+
+           
     def flatten(self):
+        ''' creates a flattened list of face-name tuples from the facetree
+            content
+        '''
         result = []
         result.append((self.name, self.face))
         for node in self.children:
@@ -267,6 +303,8 @@ class FaceTreeNode:
   
   
 class SvgPath_Element:
+    ''' Data class that holds the raw information of a single svg path edge.
+	'''
     vertexes : list[Vector]
     values   : list[float]
     type     : str
@@ -280,7 +318,6 @@ class SvgPath_Element:
         
 
 class SvgPath:
-    
     """Parse SVG path data and create FreeCAD Shapes."""
 
     commands : list[tuple]
@@ -311,6 +348,21 @@ class SvgPath:
         self.name = name
         
     def __closePath(self, path):
+        ''' This is kind of a finalizing function for the lists of raw
+            SvgPath_Elements derived by calling 'parse'.
+
+            It compares start and end points of the submitted path and 
+            replaces them with the center between them if they are the 
+            same in respect to the configured precision, but still 
+            differ mathematically. 
+            the finalized path is then added to the pool of paths
+            
+            Parameters
+            ----------
+            path : list[SvgPath_Element]
+                   a list of SvgPath_Elements representing a single, 
+                   possibly closed wire.   
+        '''
         # are start and endpoint the same?
         if     (path[0].vertexes[0].x != path[-1].vertexes[-1].x) \
             or (path[0].vertexes[0].y != path[-1].vertexes[-1].y):
@@ -324,6 +376,12 @@ class SvgPath:
 
     
     def parse(self):
+        ''' This function creates lists of SvgPath_Elements from raw svg path 
+            data. It's supposed to be called direct after SvgPath Object
+            creation.
+            Afterwards the list of SvgPath_Elements can be refined before the 
+            function 'createShapes' produces a series of Shapes.
+        '''
         path = []
         self.paths = []
         currentvec = Vector(0,0,0)
@@ -471,6 +529,7 @@ class SvgPath:
                     path.append(ele)          
             elif (d == "Z") or (d == "z"):
                 if len(path) < 2:
+                    # this is no wire, possibly not even a vertex.
                     path = []
                     currentvec = startvec
                     continue
@@ -488,6 +547,11 @@ class SvgPath:
 
 
     def createShapes(self):
+        ''' This function generates lists of shapes from SvgPath_Element 
+            lists.
+            It's supposed to be called after the function 'parse', that
+            generated SvgPath_Element lists from raw svg path data.
+        '''
         self.shapes = []
         for path in self.paths:
             shape = []
@@ -652,6 +716,15 @@ class SvgPath:
             self.shapes.append(shape)
 
     def createFaces(self, fill=True):
+        ''' This function tries to generate Faces from lists of shapes.
+            If shapes form a closed wire and the fill Attribute is set, we 
+            generate a closed Face. Otherwise we treat the shape as pure wire.
+            
+            Parameters
+            ----------
+            fill : Object/bool
+                   if True or not None Faces are generated from closed shapes.
+        '''
         cnt = 0;
         self.faces = FaceTreeNode()
         for sh in self.shapes:                               
@@ -666,11 +739,21 @@ class SvgPath:
                     self.faces.insert(sh, self.name + "_" + str(++cnt))
                 except:
                     _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
-        
+
+
     def doCuts(self):
+        ''' Exposes the FaceTreeNode.makeCuts function of the tree containing 
+            closed wire faces.
+            This function is called after creating closed Faces with
+            'createFaces' in order to hollow faces encompassing others.
+        '''      
         self.faces.makeCuts()
-        
+
+
     def getShapeList(self):
+        ''' Returns the resulting list of tuples containing name and face of 
+            each created element.
+        ''' 
         return self.faces.flatten()
     
     
