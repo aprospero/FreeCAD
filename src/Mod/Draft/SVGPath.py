@@ -233,8 +233,7 @@ class FaceTreeNode:
                    face identifier       
         ''' 
         if face.Area < 10 * (10**-Draft.precisionSVG())**2: 
-            # the plane is less than 10 resolution units in size
-            _msg("Drop face {} - too tiny. {}mm²".format(name, face.Area))
+            # drop the plane, it's less than 10 resolution units in size
             return 
         for node in self.children:
             if  node.face.Area > face.Area:
@@ -736,7 +735,10 @@ class SvgPath:
                     sh = Part.Face(sh)
                     if sh.isValid() is False:
                         sh.fix(1e-6, 0, 1)
-                    self.faces.insert(sh, self.name + "_" + str(++cnt))
+                    if not (sh.Area < 10 * (10**-Draft.precisionSVG())**2):
+                        self.faces.insert(sh, self.name + "_" + str(++cnt))
+                    elif duh_ze_logs:
+                        _msg("Drop face '{}' - too tiny. Area: {}".format(self.name + "_" + str(cnt), sh.Area))     
                 except:
                     _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
 
