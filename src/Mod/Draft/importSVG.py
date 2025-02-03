@@ -514,6 +514,13 @@ class svgHandler(xml.sax.ContentHandler):
      
      
     def __addFaceToDoc(self, named_face):
+        """Create a named document object from a name/face tuple
+
+        Parameters
+        ----------
+        named_face : name : str, face : Part.Face
+                     The Face/Wire to add, and its name
+        """
         name, face = named_face
         if not face:
             return
@@ -541,9 +548,7 @@ class svgHandler(xml.sax.ContentHandler):
                                 pr = Draft.precisionSVG()))
         
 
-               
-
-
+        
     def startElement(self, name, attrs):
         """Re-organize data into a nice clean dictionary.
 
