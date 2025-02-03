@@ -76,11 +76,6 @@ if FreeCAD.GuiUp:
 else:
     gui = False
     draftui = None
-    
-  
-  
-    
-
 
 
 svgcolors = {
@@ -503,6 +498,13 @@ class svgHandler(xml.sax.ContentHandler):
      
      
     def __addFaceToDoc(self, named_face):
+        """Create a named document object from a name/face tuple
+
+        Parameters
+        ----------
+        named_face : name : str, face : Part.Face
+                     The Face/Wire to add, and its name
+        """
         name, face = named_face
         if not face:
             return
@@ -748,16 +750,6 @@ class svgHandler(xml.sax.ContentHandler):
             shapes = svgPath.getShapeList()
             for named_shape in shapes:
                 self.__addFaceToDoc(named_shape)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         
         # Process rects
         if name == "rect":
