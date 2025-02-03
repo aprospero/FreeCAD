@@ -142,7 +142,7 @@ def makewire(path, checkclosed=False, donttry=False):
     '''
     if not donttry:
         try:
-            sh = Part.Wire(Part.__sortEdges__(path))
+            sh = Part.Wire(path)
             # sh = Part.Wire(path)
             isok = (not checkclosed) or sh.isClosed()
             if len(sh.Edges) != len(path):
@@ -346,7 +346,7 @@ class SvgPath:
         self.faces = None
         self.name = name
         
-    def __closePath(self, path):
+    def __finalizePath(self, path):
         ''' This is kind of a finalizing function for the lists of raw
             SvgPath_Elements derived by calling 'parse'.
 
@@ -362,9 +362,11 @@ class SvgPath:
                    a list of SvgPath_Elements representing a single, 
                    possibly closed wire.   
         '''
-        # are start and endpoint the same?
-        if     (path[0].vertexes[0].x != path[-1].vertexes[-1].x) \
-            or (path[0].vertexes[0].y != path[-1].vertexes[-1].y):
+        # are start and endpoint nearly but not completely the same?
+        if DraftVecUtils.equals(path[0].vertexes[0], 
+                                path[-1].vertexes[-1], Draft.precisionSVG()) \
+           and (   (path[0].vertexes[0].x != path[-1].vertexes[-1].x) \
+                or (path[0].vertexes[0].y != path[-1].vertexes[-1].y) ):
             # calculate center between start and endpoint
             dx = (path[0].vertexes[0].x + path[-1].vertexes[1].x) / 2.0
             dy = (path[0].vertexes[0].y + path[-1].vertexes[1].y) / 2.0
@@ -392,7 +394,7 @@ class SvgPath:
 
             if (d == "M" or d == "m"):
                 if path:
-                    self.__closePath(path)
+                    self.__finalizePath(path)
                     path = []
 
                 x = pointlist.pop(0)
@@ -538,11 +540,11 @@ class SvgPath:
                     ele.vertexes.append(path[-1].vertexes[-1])
                     ele.vertexes.append(path[0].vertexes[0])
                     path.append(ele)
-                self.__closePath(path)
+                self.__finalizePath(path)
                 path = []
                     
         if path:
-            self.__closePath(path)
+            self.__finalizePath(path)
 
 
     def createShapes(self):
@@ -725,22 +727,28 @@ class SvgPath:
                    if True or not None Faces are generated from closed shapes.
         '''
         cnt = 0;
+        openShapes = []
         self.faces = FaceTreeNode()
         for sh in self.shapes:                               
             # The path should be closed by now
             # sh = makewire(path, True)
+            add_wire = True
             sh = makewire(sh, checkclosed=True)
+            
             if fill and len(sh.Wires) == 1 and sh.Wires[0].isClosed():
                 try:
-                    sh = Part.Face(sh)
-                    if sh.isValid() is False:
-                        sh.fix(1e-6, 0, 1)
-                    if not (sh.Area < 10 * (10**-Draft.precisionSVG())**2):
-                        self.faces.insert(sh, self.name + "_" + str(++cnt))
-                    elif duh_ze_logs:
-                        _msg("Drop face '{}' - too tiny. Area: {}".format(self.name + "_" + str(cnt), sh.Area))     
+                    face = Part.Face(sh)
+                    if  face.isValid():
+                        add_wire = False
+                        if not (face.Area < 10 * (10**-Draft.precisionSVG())**2):
+                            self.faces.insert(face, self.name + "_f" + str(++cnt))
+                        elif duh_ze_logs:
+                            _msg("Drop face '{}' - too tiny. Area: {}".format(self.name + "_" + str(cnt), sh.Area))     
                 except:
                     _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
+            if add_wire and sh.Length > (10**-Draft.precisionSVG()):
+                openShapes.append((self.name + "_w" + str(++cnt), sh))
+        self.shapes = openShapes
 
 
     def doCuts(self):
@@ -756,7 +764,9 @@ class SvgPath:
         ''' Returns the resulting list of tuples containing name and face of 
             each created element.
         ''' 
-        return self.faces.flatten()
+        result = self.faces.flatten()
+        result.extend(self.shapes)             
+        return result
     
     
           

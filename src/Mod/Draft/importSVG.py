@@ -746,7 +746,7 @@ class svgHandler(xml.sax.ContentHandler):
                 svgPath = SvgPath(data, pathname)
                 svgPath.parse()
                 svgPath.createShapes()
-                svgPath.createFaces()
+                svgPath.createFaces(self.fill)
                 svgPath.doCuts()
                 shapes = svgPath.getShapeList()
                 for named_shape in shapes:
@@ -1055,7 +1055,7 @@ class svgHandler(xml.sax.ContentHandler):
         sh : Part.Shape or Draft.Dimension
             Object to be transformed
         """
-        if isinstance(sh, Part.Shape):
+        if isinstance(sh, Part.Shape) or isinstance(sh, Part.Wire):
             if self.transform:
                 # sh = transformCopyShape(sh, self.transform)
                 # see issue #2062
