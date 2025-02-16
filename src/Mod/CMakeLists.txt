@@ -16,6 +16,7 @@ endif(BUILD_CLOUD)
 
 if(BUILD_DRAFT)
   add_subdirectory(Draft)
+  add_subdirectory(Svgwb)
 endif(BUILD_DRAFT)
 
 if(BUILD_DRAWING)
