@@ -103,7 +103,7 @@ One unit in the SVG file will translate as one millimeter.</string>
         <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
-           <string>Mathematical precision (cruical for closed wires)</string>
+           <string>Coordinate precision (cruical for detecting closed paths)</string>
           </property>
          </widget>
         </item>
@@ -139,7 +139,7 @@ One unit in the SVG file will translate as one millimeter.</string>
 	         <number>4</number>
 	        </property>
 	        <property name="prefEntry" stdset="0">
-	         <cstring>precisionSVG</cstring>
+	         <cstring>svgPrecision</cstring>
 	        </property>
 	        <property name="prefPath" stdset="0">
 	         <cstring>Mod/Draft</cstring>
