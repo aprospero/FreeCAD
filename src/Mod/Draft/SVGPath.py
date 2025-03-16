@@ -1,7 +1,7 @@
 import re
 import math
 import FreeCAD
-from Draft import precisionSVG
+from Draft import svg_precision
 from DraftVecUtils import equals, isNull, angle
 from FreeCAD import Vector
 from draftutils.messages import _err, _msg, _wrn
@@ -667,7 +667,7 @@ class SvgPathParser:
         data. It's supposed to be called direct after SvgPath Object
         creation.
         '''
-        path = SvgPathElement(precisionSVG(), 10)
+        path = SvgPathElement(svg_precision(), 10)
         self.paths = []
         for d, argsstr in self.commands:
             relative = d.islower()
@@ -711,7 +711,7 @@ class SvgPathParser:
         fill : Object/bool
                if True or not None Faces are generated from closed shapes.
         '''
-        precision = precisionSVG()
+        precision = svg_precision()
         cnt = 0;
         openShapes = []
         self.faces = FaceTreeNode()
