@@ -63,7 +63,7 @@ from draftutils import utils
 from draftutils.translate import translate
 from draftutils.messages import _err, _msg, _wrn
 from builtins import open as pyopen
-from SVGPath import SvgPath
+from SVGPath import SvgPathParser
 
 if FreeCAD.GuiUp:
     from PySide import QtWidgets
@@ -676,6 +676,9 @@ class svgHandler(xml.sax.ContentHandler):
         if 'fill' in data:
             if data['fill'] != 'none':
                 self.fill = getcolor(data['fill'])
+        else:
+            # svg fill default is Black
+            self.fill = getcolor('Black')
         if 'stroke' in data:
             if data['stroke'] != 'none':
                 self.color = getcolor(data['stroke'])
@@ -743,10 +746,9 @@ class svgHandler(xml.sax.ContentHandler):
                 data['d'] = []
                 
             if "d" in data:
-                svgPath = SvgPath(data, pathname)
+                svgPath = SvgPathParser(data, pathname)
                 svgPath.parse()
-                svgPath.createShapes()
-                svgPath.createFaces(self.fill)
+                svgPath.create_faces(self.fill)
                 svgPath.doCuts()
                 shapes = svgPath.getShapeList()
                 for named_shape in shapes:
