@@ -464,6 +464,7 @@ class svgHandler(xml.sax.ContentHandler):
         self.style = params.get_param("svgstyle")
         self.disableUnitScaling = params.get_param("svgDisableUnitScaling")
         self.classic = params.get_param("svgClassicImportEmulation")
+        self.add_wire_for_broken_face = params.get_param("svgAddWireForBrokenFace")
         self.count = 0
         self.transform = None
         self.grouptransform = []
@@ -749,7 +750,7 @@ class svgHandler(xml.sax.ContentHandler):
             if "d" in data:
                 svgPath = SvgPathParser(data, pathname)
                 svgPath.parse()
-                svgPath.create_faces(self.fill, self.classic)
+                svgPath.create_faces(self.fill, self.classic, self.add_wire_for_broken_face)
                 if not self.classic:
                     svgPath.doCuts()
                 shapes = svgPath.getShapeList()

@@ -99,6 +99,26 @@ One unit in the SVG file will translate as one millimeter.</string>
         <item>
          <widget class="Gui::PrefCheckBox" name="checkBox">
           <property name="toolTip">
+           <string>If face generation may result in a degenerated face
+a raw Wire from the original Shape is added.</string>
+          </property>
+          <property name="text">
+           <string>Add wires of broken faces</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <property name="prefEntry" stdset="0">
+           <cstring>svgAddWireForBrokenFace</cstring>
+          </property>
+          <property name="prefPath" stdset="0">
+           <cstring>Mod/Draft</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Gui::PrefCheckBox" name="checkBox">
+          <property name="toolTip">
            <string>If checked, 'classic' import quality is emulated (for backward compatibility).</string>
           </property>
           <property name="text">
