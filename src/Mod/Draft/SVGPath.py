@@ -700,7 +700,7 @@ class SvgPathParser:
         self.shapes = path.create_edges()
         
         
-    def create_faces(self, fill=True, cut=True):
+    def create_faces(self, fill=True, classic=False):
         ''' 
         Generate Faces from lists of Shapes.
         If shapes form a closed wire and the fill Attribute is set, we 
@@ -715,9 +715,7 @@ class SvgPathParser:
         cnt = 0;
         openShapes = []
         self.faces = FaceTreeNode()
-        for sh in self.shapes:                               
-            # The path should be closed by now
-            # sh = make_wire(path, self.precision, True)
+        for sh in self.shapes:
             add_wire = True
             wr = make_wire(sh, precision, checkclosed=True)
             wrcpy = wr.copy();
@@ -729,11 +727,15 @@ class SvgPathParser:
                     else:
                         add_wire = False
                     if not (face.Area < 10 * (precision_step(precision) ** 2)):
-                        self.faces.insert(face, self.name + "_f" + str(cnt))
+                        if classic or cnt < 0:
+                            tmp_name = self.name
+                        else:
+                            tmp_name = self.name + "_" + str(cnt)
+                        self.faces.insert(face, tmp_name)
                         cnt += 1
                 except:
                     _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
-            if add_wire:
+            if add_wire and not classic:
                 if wrcpy.Length > precision_step(precision):
                     openShapes.append((self.name + "_w" + str(cnt-1), wrcpy))
 

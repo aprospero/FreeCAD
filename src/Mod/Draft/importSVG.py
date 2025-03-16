@@ -463,6 +463,7 @@ class svgHandler(xml.sax.ContentHandler):
         """Retrieve Draft parameters and initialize."""
         self.style = params.get_param("svgstyle")
         self.disableUnitScaling = params.get_param("svgDisableUnitScaling")
+        self.classic = params.get_param("svgClassicImportEmulation")
         self.count = 0
         self.transform = None
         self.grouptransform = []
@@ -748,8 +749,9 @@ class svgHandler(xml.sax.ContentHandler):
             if "d" in data:
                 svgPath = SvgPathParser(data, pathname)
                 svgPath.parse()
-                svgPath.create_faces(self.fill)
-                svgPath.doCuts()
+                svgPath.create_faces(self.fill, self.classic)
+                if not self.classic:
+                    svgPath.doCuts()
                 shapes = svgPath.getShapeList()
                 for named_shape in shapes:
                     self.__addFaceToDoc(named_shape)
