@@ -185,8 +185,11 @@ def approx_bspline(
         tan2 = curve.tangent(curve.LastParameter)[0]
         pts = curve.discretize(num)
         bs = BSplineCurve()
-        bs.interpolate(Points=pts, InitialTangent=tan1, FinalTangent=tan2)
-        return bs
+        try:
+            bs.interpolate(Points=pts, InitialTangent=tan1, FinalTangent=tan2)
+            return bs
+        except OCCError:
+            pass
     return curve
 
 
