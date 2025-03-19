@@ -65,6 +65,7 @@ from draftutils.translate import translate
 from draftutils.messages import _err, _msg, _wrn
 from builtins import open as pyopen
 from SVGPath import SvgPathParser
+from SVGPath import timeit, timeit_print
 
 if FreeCAD.GuiUp:
     from PySide import QtWidgets
@@ -751,13 +752,13 @@ class svgHandler(xml.sax.ContentHandler):
                 
             if "d" in data:
                 svgPath = SvgPathParser(data, pathname)
-                svgPath.parse()
-                svgPath.create_faces(self.fill, self.classic, self.add_wire_for_broken_face)
+                timeit(svgPath.parse)
+                timeit(svgPath.create_faces, self.fill, self.classic, self.add_wire_for_broken_face)
                 if not self.classic:
-                    svgPath.doCuts()
-                shapes = svgPath.getShapeList()
+                    timeit(svgPath.doCuts)
+                shapes = timeit(svgPath.getShapeList)
                 for named_shape in shapes:
-                    self.__addFaceToDoc(named_shape)
+                    timeit(self.__addFaceToDoc, named_shape)
         
         # Process rects
         if name == "rect":
@@ -1001,6 +1002,7 @@ class svgHandler(xml.sax.ContentHandler):
                     _msg("no symbol data")
 
         _msg("done processing element {}".format(self.count))
+        timeit_print()
     # startElement()
 
     def characters(self, content):
