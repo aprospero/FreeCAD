@@ -56,7 +56,7 @@ import xml.sax
 import FreeCAD
 import Part
 import Draft
-import DraftVecUtils
+from DraftVecUtils import equals
 from FreeCAD import Vector
 from draftutils import params
 from draftutils import utils
@@ -841,7 +841,7 @@ class svgHandler(xml.sax.ContentHandler):
                 for esh1, esh2 in zip(esh[-1:] + esh[:-1], esh):
                     p1 = esh1.Vertexes[-1].Point
                     p2 = esh2.Vertexes[0].Point
-                    if not DraftVecUtils.equals(p1, p2, precision):
+                    if not equals(p1, p2, precision):
                         # straight segments
                         _sh = Part.LineSegment(p1, p2).toShape()
                         edges.append(_sh)
@@ -892,7 +892,7 @@ class svgHandler(xml.sax.ContentHandler):
                     points = points + points[:2]  # emulate closepath
                 for svgx, svgy in zip(points[2::2], points[3::2]):
                     currentvec = Vector(svgx, -svgy, 0)
-                    if not DraftVecUtils.equals(lastvec, currentvec, precision):
+                    if not equals(lastvec, currentvec, precision):
                         seg = Part.LineSegment(lastvec, currentvec).toShape()
                         # print("polyline seg ", lastvec, currentvec)
                         lastvec = currentvec

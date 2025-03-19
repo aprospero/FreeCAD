@@ -1,9 +1,7 @@
 import re
 import math
-import FreeCAD
-from Draft import svg_precision
+from FreeCAD import Vector, Matrix
 from DraftVecUtils import equals, isNull, angle
-from FreeCAD import Vector
 from draftutils.utils import svg_precision
 from draftutils.messages import _err, _msg, _wrn
 
@@ -71,7 +69,7 @@ def arc_end_to_center(lastvec, currentvec, rx, ry,
     ry = float(ry)
     v0 = lastvec.sub(currentvec)
     v0.multiply(0.5)
-    m1 = FreeCAD.Matrix()
+    m1 = Matrix()
     m1.rotateZ(-x_rotation)  # eq. 5.1
     v1 = m1.multiply(v0)
     if correction:
@@ -100,7 +98,7 @@ def arc_end_to_center(lastvec, currentvec, rx, ry,
         scalefac = scalefacpos * scalefacsign
         # Step2 eq. 5.2
         vcx1 = Vector(v1.y * rx/ry, -v1.x * ry/rx, 0).multiply(scalefac)
-        m2 = FreeCAD.Matrix()
+        m2 = Matrix()
         m2.rotateZ(x_rotation)
         centeroff = currentvec.add(lastvec)
         centeroff.multiply(0.5)
@@ -165,7 +163,7 @@ def arc_center_to_end(center, rx, ry, angle1, angledelta, xrotation=0.0):
     vr2 = Vector(rx * math.cos(angle1 + angledelta),
                  ry * math.sin(angle1 + angledelta),
                  0)
-    mxrot = FreeCAD.Matrix()
+    mxrot = Matrix()
     mxrot.rotateZ(xrotation)
     v1 = mxrot.multiply(vr1).add(center)
     v2 = mxrot.multiply(vr2).add(center)
