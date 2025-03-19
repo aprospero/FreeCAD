@@ -19,10 +19,10 @@ from Part import (
     OCCError
 )
 
-def precision_step(precision):
+def _precision_step(precision):
     return 10**(-precision)
 
-def arc_end_to_center(lastvec, currentvec, rx, ry,
+def _arc_end_to_center(lastvec, currentvec, rx, ry,
                       x_rotation=0.0, correction=False):
     '''Calculate the possible centers for an arc in endpoint parameterization.
 
@@ -130,7 +130,7 @@ def arc_end_to_center(lastvec, currentvec, rx, ry,
     return results, (rx, ry)
 
 
-def arc_center_to_end(center, rx, ry, angle1, angledelta, xrotation=0.0):
+def _arc_center_to_end(center, rx, ry, angle1, angledelta, xrotation=0.0):
     '''Calculate start and end points, and flags of an arc.
 
     Calculate start and end points, and flags of an arc given in
@@ -172,7 +172,7 @@ def arc_center_to_end(center, rx, ry, angle1, angledelta, xrotation=0.0):
     return v1, v2, fa, fs
 
 
-def approx_bspline(
+def _approx_bspline(
     curve: BezierCurve,
     num: int = 10,
     tol: float = 1e-7,
@@ -192,7 +192,7 @@ def approx_bspline(
     return curve
 
 
-def make_wire(path : list[Edge], precision : int, checkclosed : bool=False, donttry : bool=False):
+def _make_wire(path : list[Edge], precision : int, checkclosed : bool=False, donttry : bool=False):
     '''Try to make a wire out of the list of edges.
 
     If the wire functions fail or the wire is not closed,
@@ -230,7 +230,7 @@ def make_wire(path : list[Edge], precision : int, checkclosed : bool=False, dont
         # Code from wmayer forum p15549 to fix the tolerance problem
         # original tolerance = 0.00001
         comp = Compound(path)
-        _sh = comp.connectEdgesToWires(False, precision_step(precision))
+        _sh = comp.connectEdgesToWires(False, _precision_step(precision))
         sh = _sh.Wires[0]
         if len(sh.Edges) != len(path):
             _wrn("Unable to form a wire")
@@ -239,9 +239,10 @@ def make_wire(path : list[Edge], precision : int, checkclosed : bool=False, dont
 
 
 class FaceTreeNode:
-    '''Building Block of a tree structure holding one-closed-wire faces 
-       sorted after heir enclosure of each other.
-       This class only works with faces that have exactly one closed wire
+    '''
+    Building Block of a tree structure holding one-closed-wire faces 
+    sorted after their enclosure of each other.
+    This class only works with faces that have exactly one closed wire
     '''
     face     : Face
     children : list
@@ -256,15 +257,16 @@ class FaceTreeNode:
 
       
     def insert (self, face, name):
-        ''' takes a single-wire face, and inserts it into the tree 
-            depending on its enclosure in/of in already added faces
+        ''' 
+        takes a single-wire named face, and inserts it into the tree 
+        depending on its enclosure in/of already added faces.
 
-            Parameters
-            ----------
-            face : Face
-                   single closed wire face to be added to the tree
-            name : str
-                   face identifier       
+        Parameters
+        ----------
+        face : Face
+               single closed wire face to be added to the tree
+        name : str
+               face identifier       
         ''' 
         for node in self.children:
             if  node.face.Area > face.Area:
@@ -294,10 +296,11 @@ class FaceTreeNode:
 
      
     def makeCuts(self):
-        ''' recursively traverse the tree and cuts all faces in even 
-            numbered tree levels with their direct childrens faces. 
-            Additionally the tree is shrunk by removing the odd numbered 
-            tree levels.                 
+        ''' 
+        recursively traverse the tree and cuts all faces in even 
+        numbered tree levels with their direct childrens faces. 
+        Additionally the tree is shrunk by removing the odd numbered 
+        tree levels.                 
         '''
         result = self.face
         if not result:
@@ -561,7 +564,7 @@ class SvgPathElement:
                     # Calculate the possible centers for an arc
                     # in 'endpoint parameterization'.
                     _x_rot = math.radians(-x_rotation)
-                    (solution, (rx, ry)) = arc_end_to_center(
+                    (solution, (rx, ry)) = _arc_end_to_center(
                         last_v, next_v,
                         rx, ry,
                         _x_rot,
@@ -585,7 +588,7 @@ class SvgPathElement:
                     seg = e1a.toShape()
                     if swap_axis:
                         seg.rotate(v_center, Vector(0, 0, 1), 90)
-                    _precision = precision_step(self.precision)
+                    _precision = _precision_step(self.precision)
                     if abs(x_rotation) > _precision:
                         seg.rotate(v_center, Vector(0, 0, 1), -x_rotation)
                     if sweep_flag:
@@ -595,7 +598,7 @@ class SvgPathElement:
                 case "cbezier":
                     pole1 = pds["pole1"]
                     pole2 = pds["pole2"]
-                    _precision = precision_step(self.precision + 2)
+                    _precision = _precision_step(self.precision + 2)
                     _d1 = pole1.distanceToLine(last_v, next_v)
                     _d2 = pole2.distanceToLine(last_v, next_v)
                     if _d1 < _precision and _d2 < _precision:
@@ -604,7 +607,7 @@ class SvgPathElement:
                     else:
                         b = BezierCurve()
                         b.setPoles([last_v, pole1, pole2, next_v])
-                        seg = approx_bspline(b, self.interpol_pts).toShape()
+                        seg = _approx_bspline(b, self.interpol_pts).toShape()
                     edges.append(seg)
                 case "qbezier":
                     if equals(last_v, next_v, self.precision):
@@ -612,7 +615,7 @@ class SvgPathElement:
                         next_v = last_v
                     else:
                         pole = pds["pole"]
-                        _precision = precision_step(self.precision + 2)
+                        _precision = _precision_step(self.precision + 2)
                         _distance = pole.distanceToLine(last_v, next_v)
                         if _distance < _precision:
                             # pole is on the line
@@ -621,7 +624,7 @@ class SvgPathElement:
                         else:
                             b = BezierCurve()
                             b.setPoles([last_v, pole, next_v])
-                            seg = approx_bspline(b, self.interpol_pts).toShape()
+                            seg = _approx_bspline(b, self.interpol_pts).toShape()
                         edges.append(seg)
                 case _:
                     _msg("Illegal path_data type. {}".format(pds['type']))
@@ -719,7 +722,7 @@ class SvgPathParser:
         self.faces = FaceTreeNode()
         for sh in self.shapes:
             add_wire = add_wire_for_broken_face
-            wr = make_wire(sh, precision, checkclosed=True)
+            wr = _make_wire(sh, precision, checkclosed=True)
             wrcpy = wr.copy();
             if fill and len(wr.Wires) == 1 and wr.Wires[0].isClosed():
                 try:
@@ -728,7 +731,7 @@ class SvgPathParser:
                         face.fix(1e-6, 0, 1)
                     else:
                         add_wire = False
-                    if not (face.Area < 10 * (precision_step(precision) ** 2)):
+                    if not (face.Area < 10 * (_precision_step(precision) ** 2)):
                         if classic or cnt < 0:
                             tmp_name = self.name
                         else:
@@ -738,7 +741,7 @@ class SvgPathParser:
                 except:
                     _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
             if add_wire and not classic:
-                if wrcpy.Length > precision_step(precision):
+                if wrcpy.Length > _precision_step(precision):
                     openShapes.append((self.name + "_w" + str(cnt-1), wrcpy))
 
         self.shapes = openShapes
