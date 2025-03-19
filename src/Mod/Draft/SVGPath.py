@@ -19,6 +19,43 @@ from Part import (
     OCCError
 )
 
+from time import time
+timeit_result = { }
+
+def timeit(function, *args):
+    ini_t = time()
+    retval = function(*args)
+    fin_t = time()
+    
+    if False:
+        import pydevd
+        pydevd.settrace()
+
+    if function.__name__ in timeit_result:
+        result = timeit_result[function.__name__]
+    else:
+        result = []
+        timeit_result[function.__name__] = result
+    result.append(fin_t - ini_t)    
+    return retval
+
+def timeit_print():
+    for fct_name in timeit_result.keys():
+        _res = timeit_result[fct_name]
+        _min = 999999999
+        _max = 0
+        _sum = 0
+        _cnt = len(_res)
+        for t in _res: 
+            t *= 1000 # we want milliseconds
+            if t > _max:
+                _max = t
+            if t < _min:
+                _min = t
+            _sum += t
+        _msg("{:>30} Cnt:{:04d} Min:{:08.3f} Max:{:08.3f} Avg:{:08.3f} Sum:{:10.1f} (ms.µs))"
+                .format(fct_name, _cnt, _min, _max, _sum/_cnt, _sum))
+
 def _precision_step(precision):
     return 10**(-precision)
 
