@@ -4,6 +4,7 @@ import FreeCAD
 from Draft import svg_precision
 from DraftVecUtils import equals, isNull, angle
 from FreeCAD import Vector
+from draftutils.utils import svg_precision
 from draftutils.messages import _err, _msg, _wrn
 
 from Part import (
