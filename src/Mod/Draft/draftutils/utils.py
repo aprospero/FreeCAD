@@ -224,7 +224,7 @@ def svg_precision():
     Returns
     -------
     int
-        params.get_param("precisionSVG")
+        params.get_param("svgPrecision")
     """
     return params.get_param("svgPrecision")
 
