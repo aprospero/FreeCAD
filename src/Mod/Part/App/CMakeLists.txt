@@ -1,4 +1,6 @@
-add_library(Part SHARED)
+if(FREETYPE_FOUND)
+    add_definitions(-DFCUseFreeType)
+endif(FREETYPE_FOUND)
 
 include_directories(
     ${CMAKE_BINARY_DIR}
@@ -7,12 +9,19 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_include_directories(
-    Part
+include_directories(
     SYSTEM
-    PUBLIC
+    ${Boost_INCLUDE_DIRS}
     ${OCC_INCLUDE_DIR}
+    ${PYCXX_INCLUDE_DIR}
+    ${Python3_INCLUDE_DIRS}
+    ${XercesC_INCLUDE_DIRS}
+    ${ZIPIOS_INCLUDES}
+    ${ZLIB_INCLUDE_DIR}
+    ${FREETYPE_INCLUDE_DIRS}
 )
+
+link_directories(${OCC_LIBRARY_DIR})
 
 set(Part_LIBS
     ${OCC_LIBRARIES}
@@ -21,15 +30,7 @@ set(Part_LIBS
     Materials
 )
 
-target_link_directories(Part PUBLIC ${OCC_LIBRARY_DIR})
-
 if(FREETYPE_FOUND)
-    add_definitions(-DFCUseFreeType)
-
-    include_directories(
-        ${FREETYPE_INCLUDE_DIRS}
-    )
-
     set(Part_LIBS
         ${Part_LIBS}
         ${FREETYPE_LIBRARIES}
@@ -604,7 +605,7 @@ if(EIGEN3_NO_DEPRECATED_COPY)
         PROPERTIES COMPILE_FLAGS ${EIGEN3_NO_DEPRECATED_COPY})
 endif()
 
-target_sources(Part PRIVATE ${Part_SRCS} ${FCBRepAlgoAPI_SRCS})
+add_library(Part SHARED ${Part_SRCS} ${FCBRepAlgoAPI_SRCS})
 target_link_libraries(Part ${Part_LIBS})
 if (FREECAD_WARN_ERROR)
     target_compile_warn_error(Part)

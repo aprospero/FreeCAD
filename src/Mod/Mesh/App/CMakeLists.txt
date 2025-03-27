@@ -1,5 +1,3 @@
-add_library(Mesh SHARED)
-
 if(WIN32)
     add_definitions(-DFCAppMesh -DWM4_FOUNDATION_DLL_EXPORT)
 endif(WIN32)
@@ -10,14 +8,19 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/3rdParty/libkdtree
 )
 
-target_include_directories(
-    Mesh
+include_directories(
     SYSTEM
-    PUBLIC
+    ${Boost_INCLUDE_DIRS}
+    ${PYCXX_INCLUDE_DIR}
+    ${Python3_INCLUDE_DIRS}
+    ${XercesC_INCLUDE_DIRS}
+    ${ZIPIOS_INCLUDES}
+    ${ZLIB_INCLUDE_DIR}
     ${EIGEN3_INCLUDE_DIR}
 )
 
 set(Mesh_LIBS
+    ${Boost_LIBRARIES}
     FreeCADBase
     FreeCADApp
 )
@@ -414,7 +417,7 @@ if (EIGEN3_NO_DEPRECATED_COPY)
         PROPERTIES COMPILE_FLAGS ${EIGEN3_NO_DEPRECATED_COPY})
 endif ()
 
-target_sources(Mesh PRIVATE ${Core_SRCS} ${WildMagic4_SRCS} ${Mesh_SRCS})
+add_library(Mesh SHARED ${Core_SRCS} ${WildMagic4_SRCS} ${Mesh_SRCS})
 target_link_libraries(Mesh ${Mesh_LIBS})
 if (FREECAD_WARN_ERROR)
     target_compile_warn_error(Mesh)

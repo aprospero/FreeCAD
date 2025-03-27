@@ -1,5 +1,3 @@
-add_library(MeshPart SHARED)
-
 if (SMESH_FOUND)
     add_definitions(-DHAVE_SMESH)
     if(SMESH_VERSION_MAJOR LESS_EQUAL 9 AND SMESH_VERSION_MINOR LESS 10 )
@@ -16,22 +14,22 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
 )
 
-target_include_directories(
-    MeshPart
+include_directories(
     SYSTEM
-    PUBLIC
+    ${Boost_INCLUDE_DIRS}
+    ${OCC_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIR}
+    ${PYCXX_INCLUDE_DIR}
+    ${Python3_INCLUDE_DIRS}
     ${SMESH_INCLUDE_DIR}
     ${VTK_INCLUDE_DIRS}
-)
-
-target_include_directories(
-    MeshPart
-    SYSTEM
-    PRIVATE
+    ${EIGEN3_INCLUDE_DIR}
     ${pybind11_INCLUDE_DIR}
 )
 
-target_link_directories(MeshPart PUBLIC ${SMESH_LIB_PATH})
+
+link_directories(${OCC_LIBRARY_DIR})
+link_directories(${SMESH_LIB_PATH})
 
 set(MeshPart_LIBS
     Part
@@ -81,7 +79,7 @@ if (MINGW AND CMAKE_COMPILER_IS_CLANGXX)
     endif()
 endif()
 
-target_sources(MeshPart PRIVATE ${MeshPart_SRCS} ${MeshPart_Scripts})
+add_library(MeshPart SHARED ${MeshPart_SRCS} ${MeshPart_Scripts})
 target_link_libraries(MeshPart ${MeshPart_LIBS})
 if (FREECAD_WARN_ERROR)
     target_compile_warn_error(MeshPart)

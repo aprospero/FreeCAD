@@ -1,5 +1,3 @@
-add_library(Robot SHARED)
-
 include_directories(
     ${CMAKE_BINARY_DIR}
     ${CMAKE_SOURCE_DIR}/src
@@ -7,12 +5,18 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_include_directories(
-    Robot
+include_directories(
     SYSTEM
-    PUBLIC
+    ${Boost_INCLUDE_DIRS}
+    ${OCC_INCLUDE_DIR}
     ${EIGEN3_INCLUDE_DIR}
+    ${PYCXX_INCLUDE_DIR}
+    ${Python3_INCLUDE_DIRS}
+    ${ZIPIOS_INCLUDES}
+    ${ZLIB_INCLUDE_DIR}
+    ${XercesC_INCLUDE_DIRS}
 )
+link_directories(${OCC_LIBRARY_DIR})
 
 set(Robot_LIBS
     Part
@@ -123,7 +127,7 @@ endif(FREECAD_USE_PCH)
 SOURCE_GROUP("Python" FILES ${Python_SRCS})
 SOURCE_GROUP("Module" FILES ${Mod_SRCS})
 
-target_sources(Robot PRIVATE ${Robot_SRCS})
+add_library(Robot SHARED ${Robot_SRCS})
 target_link_libraries(Robot ${Robot_LIBS})
 if (FREECAD_WARN_ERROR)
     target_compile_warn_error(Robot)
