@@ -1,7 +1,7 @@
 import re
 import math
 from FreeCAD import Vector, Matrix
-from DraftVecUtils import equals, isNull, angle
+from DraftVecUtils import equals, isNull, angle, dist
 from draftutils.utils import svg_precision
 from draftutils.messages import _err, _msg, _wrn
 
@@ -603,12 +603,18 @@ class SvgPathElement:
                     _d2 = pole2.distanceToLine(last_v, next_v)
                     if _d1 < _precision and _d2 < _precision:
                         # poles and endpints are all on a line
-                        seg = LineSegment(last_v, next_v).toShape()
+                        if equals(last_v, next_v, self.precision):
+                            # in this case we don't accept (nearly) zero
+                            # distance betwen start and end (skip it).
+                            next_v = last_v
+                        else:
+                            seg = LineSegment(last_v, next_v).toShape()
+                            edges.append(seg)
                     else:
                         b = BezierCurve()
                         b.setPoles([last_v, pole1, pole2, next_v])
                         seg = _approx_bspline(b, self.interpol_pts).toShape()
-                    edges.append(seg)
+                        edges.append(seg)
                 case "qbezier":
                     if equals(last_v, next_v, self.precision):
                         # segment too small - skipping.
