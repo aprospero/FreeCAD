@@ -459,8 +459,8 @@ class svgHandler(xml.sax.ContentHandler):
         """Retrieve Draft parameters and initialize."""
         self.style = params.get_param("svgstyle")
         self.disableUnitScaling = params.get_param("svgDisableUnitScaling")
-        self.classic = params.get_param("svgClassicImportEmulation")
-        self.add_wire_for_broken_face = params.get_param("svgAddWireForBrokenFace")
+        self.make_cuts = params.get_param("svgMakeCuts")
+        self.add_wire_for_invalid_face = params.get_param("svgAddWireForInvalidFace")
         self.count = 0
         self.transform = None
         self.grouptransform = []
@@ -754,8 +754,8 @@ class svgHandler(xml.sax.ContentHandler):
             if "d" in data:
                 svgPath = SvgPathParser(data, pathname)
                 timeit(svgPath.parse)
-                timeit(svgPath.create_faces, self.fill, self.classic, self.add_wire_for_broken_face)
-                if not self.classic:
+                timeit(svgPath.create_faces, self.fill, self.add_wire_for_invalid_face)
+                if self.make_cuts:
                     timeit(svgPath.doCuts)
                 shapes = timeit(svgPath.getShapeList)
                 for named_shape in shapes:

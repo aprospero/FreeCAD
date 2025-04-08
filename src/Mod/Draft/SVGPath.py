@@ -748,7 +748,7 @@ class SvgPathParser:
         self.shapes = path.create_edges()
         
         
-    def create_faces(self, fill=True, classic=False, add_wire_for_broken_face=False):
+    def create_faces(self, fill=True, add_wire_for_invalid_face=False):
         ''' 
         Generate Faces from lists of Shapes.
         If shapes form a closed wire and the fill Attribute is set, we 
@@ -760,32 +760,33 @@ class SvgPathParser:
                if True or not None Faces are generated from closed shapes.
         '''
         precision = svg_precision()
-        cnt = 0;
+        cnt = -1;
         openShapes = []
         self.faces = FaceTreeNode()
         for sh in self.shapes:
-            add_wire = add_wire_for_broken_face
+            cnt += 1
+            add_wire = True
             wr = _make_wire(sh, precision, checkclosed=True)
             wrcpy = wr.copy();
-            if fill and len(wr.Wires) == 1 and wr.Wires[0].isClosed():
+            if cnt > 0:
+                face_name = self.name + "_" + str(cnt)
+            else:
+                face_name = self.name 
+            if fill and wr.Wires[0].isClosed():
                 try:
                     face = Face(wr)
                     if not face.isValid():
+                        add_wire = add_wire_for_invalid_face
                         face.fix(1e-6, 0, 1)
                     else:
                         add_wire = False
                     if not (face.Area < 10 * (_precision_step(precision) ** 2)):
-                        if classic or cnt < 0:
-                            tmp_name = self.name
-                        else:
-                            tmp_name = self.name + "_" + str(cnt)
-                        self.faces.insert(face, tmp_name)
-                        cnt += 1
+                        self.faces.insert(face, face_name)
                 except:
                     _msg("Failed to make a shape from path '{}'. This Path will be discarded.".format(self.name))
-            if add_wire and not classic:
+            if add_wire:
                 if wrcpy.Length > _precision_step(precision):
-                    openShapes.append((self.name + "_w" + str(cnt-1), wrcpy))
+                    openShapes.append((face_name + "_w", wrcpy))
 
         self.shapes = openShapes
 
