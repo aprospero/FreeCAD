@@ -675,9 +675,6 @@ class svgHandler(xml.sax.ContentHandler):
         if 'fill' in data:
             if data['fill'] != 'none':
                 self.fill = getcolor(data['fill'])
-        else:
-            # svg fill default is Black
-            self.fill = getcolor('Black')
         if 'stroke' in data:
             if data['stroke'] != 'none':
                 self.color = getcolor(data['stroke'])
@@ -695,7 +692,7 @@ class svgHandler(xml.sax.ContentHandler):
             if name == "g":
                 self.grouptransform.append(FreeCAD.Matrix())
 
-        if self.style == 1:
+        if self.style == 0:
             self.color = self.col
             self.width = self.lw
 
@@ -703,12 +700,15 @@ class svgHandler(xml.sax.ContentHandler):
         if name == "g":
             self.groupstyles.append([self.fill, self.color, self.width])
         if self.fill is None:
-            if "fill" not in data or data['fill'] != 'none':
+            if "fill" not in data:
                 # do not override fill if this item has specifically set a none fill
                 for groupstyle in reversed(self.groupstyles):
                     if groupstyle[0] is not None:
                         self.fill = groupstyle[0]
                         break
+                if self.fill is None:
+                    # svg fill default is Black
+                    self.fill = getcolor('Black')
         if self.color is None:
             for groupstyle in reversed(self.groupstyles):
                 if groupstyle[1] is not None:
